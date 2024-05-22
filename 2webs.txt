@@ -1,0 +1,108 @@
+cd /opt/bitnami
+sudo mkdir -p apps/wordpress2/htdocs
+sudo mkdir -p apps/wordpress2/conf
+
+sudo cp -r /opt/bitnami/wordpress/* /opt/bitnami/apps/wordpress2/htdocs
+sudo nano /opt/bitnami/apache2/conf/bitnami/bitnami-apps-vhosts.conf
+########
+<VirtualHost *:80>
+    ServerName your-first-domain.com
+    DocumentRoot "/opt/bitnami/wordpress"
+    Include "/opt/bitnami/wordpress/conf/httpd-app.conf"
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerName your-second-domain.com
+    DocumentRoot "/opt/bitnami/apps/wordpress2/htdocs"
+    Include "/opt/bitnami/apps/wordpress2/conf/httpd-app.conf"
+</VirtualHost>
+##########
+
+sudo nano /opt/bitnami/apache2/conf/httpd.conf
+Include "/opt/bitnami/apache2/conf/bitnami/bitnami-apps-vhosts.conf"
+
+
+sudo mkdir -p /opt/bitnami/wordpress/conf
+sudo nano /opt/bitnami/wordpress/conf/httpd-app.conf
+##########
+<Directory "/opt/bitnami/wordpress">
+    Options +MultiViews +FollowSymLinks
+    AllowOverride None
+    <IfVersion < 2.3 >
+        Order allow,deny
+        Allow from all
+    </IfVersion>
+    <IfVersion >= 2.3>
+        Require all granted
+    </IfVersion>
+    <IfModule php7_module>
+        php_value upload_max_filesize 80M
+        php_value post_max_size 80M
+    </IfModule>
+    Include "/opt/bitnami/wordpress/conf/htaccess.conf"
+</Directory>
+###########
+
+sudo nano /opt/bitnami/wordpress/conf/htaccess.conf
+# This file intentionally left blank
+
+
+sudo nano /opt/bitnami/apps/wordpress2/conf/httpd-app.conf
+############
+<Directory "/opt/bitnami/apps/wordpress2/htdocs">
+    Options +MultiViews +FollowSymLinks
+    AllowOverride None
+    <IfVersion < 2.3 >
+        Order allow,deny
+        Allow from all
+    </IfVersion>
+    <IfVersion >= 2.3>
+        Require all granted
+    </IfVersion>
+    <IfModule php7_module>
+        php_value upload_max_filesize 80M
+        php_value post_max_size 80M
+    </IfModule>
+    Include "/opt/bitnami/apps/wordpress2/conf/htaccess.conf"
+</Directory>
+##############
+
+sudo nano /opt/bitnami/apps/wordpress2/conf/htaccess.conf
+# This file intentionally left blank
+
+
+sudo /opt/bitnami/mariadb/bin/mysql -u root -p
+
+CREATE DATABASE wordpress;
+CREATE USER 'bn_wordpress'@'localhost' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON wordpress.* TO 'bn_wordpress'@'localhost';
+FLUSH PRIVILEGES;
+
+
+CREATE DATABASE wordpress2;
+CREATE USER 'wordpress2user'@'localhost' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON wordpress2.* TO 'wordpress2user'@'localhost';
+FLUSH PRIVILEGES;
+
+
+sudo rm /opt/bitnami/wordpress/wp-config.php
+sudo rm /opt/bitnami/apps/wordpress2/htdocs/wp-config.php
+
+sudo nano /opt/bitnami/wordpress/wp-config.php
+define('DB_NAME', 'wordpress');
+define('DB_USER', 'bn_wordpress');
+define('DB_PASSWORD', 'your_password');
+define('DB_HOST', 'localhost');
+
+sudo nano /opt/bitnami/apps/wordpress2/htdocs/wp-config.php
+define('DB_NAME', 'wordpress2');
+define('DB_USER', 'wordpress2user');
+define('DB_PASSWORD', 'password');
+define('DB_HOST', 'localhost');
+
+sudo mv /bitnami/wordpress/wp-config.php /bitnami/wordpress/wp-config2.php
+
+sudo /opt/bitnami/ctlscript.sh restart apache
+sudo /opt/bitnami/ctlscript.sh restart mariadb
+
+
