@@ -3,6 +3,15 @@ sudo mkdir -p apps/wordpress2/htdocs
 sudo mkdir -p apps/wordpress2/conf
 
 sudo cp -r /opt/bitnami/wordpress/* /opt/bitnami/apps/wordpress2/htdocs
+
+###Set permissions########
+sudo chown -R bitnami:daemon /opt/bitnami/apps/wordpress2/htdocs
+sudo find /opt/bitnami/apps/wordpress2/htdocs -type d -exec chmod 775 {} \;
+sudo find /opt/bitnami/apps/wordpress2/htdocs -type f -exec chmod 664 {} \;
+sudo chmod 640 /opt/bitnami/apps/wordpress2/htdocs/wp-config.php
+###########################
+
+
 sudo nano /opt/bitnami/apache2/conf/bitnami/bitnami-apps-vhosts.conf
 ########
 <VirtualHost *:80>
