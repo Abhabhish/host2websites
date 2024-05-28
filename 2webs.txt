@@ -4,13 +4,6 @@ sudo mkdir -p apps/wordpress2/conf
 
 sudo cp -r /opt/bitnami/wordpress/* /opt/bitnami/apps/wordpress2/htdocs
 
-###Set permissions########
-sudo chown -R bitnami:daemon /opt/bitnami/apps/wordpress2/htdocs
-sudo find /opt/bitnami/apps/wordpress2/htdocs -type d -exec chmod 775 {} \;
-sudo find /opt/bitnami/apps/wordpress2/htdocs -type f -exec chmod 664 {} \;
-sudo chmod 640 /opt/bitnami/apps/wordpress2/htdocs/wp-config.php
-###########################
-
 
 sudo nano /opt/bitnami/apache2/conf/bitnami/bitnami-apps-vhosts.conf
 ########
@@ -113,5 +106,75 @@ sudo mv /bitnami/wordpress/wp-config.php /bitnami/wordpress/wp-config2.php
 
 sudo /opt/bitnami/ctlscript.sh restart apache
 sudo /opt/bitnami/ctlscript.sh restart mariadb
+
+
+
+# ADDING SSL
+Note: after adding ssl if we try to access webs using https then both domains will open up same site so we will have to do the following:
+
+ls /opt/bitnami/apache2/conf/ to check path of .crt and .key file
+sudo nano /opt/bitnami/apache2/conf/bitnami/bitnami-apps-vhosts.conf
+############################################################################
+<VirtualHost *:80>
+    ServerName a.shankarestate.co.in
+    DocumentRoot "/opt/bitnami/wordpress"
+    RewriteEngine On
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^/(.*) https://%{SERVER_NAME}/$1 [R,L]
+    Include "/opt/bitnami/wordpress/conf/httpd-app.conf"
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerName a.shankarestateinfo.com
+    DocumentRoot "/opt/bitnami/apps/wordpress2/htdocs"
+    RewriteEngine On
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^/(.*) https://%{SERVER_NAME}/$1 [R,L]
+    Include "/opt/bitnami/apps/wordpress2/conf/httpd-app.conf"
+</VirtualHost>
+
+
+<VirtualHost *:443>
+    ServerName a.shankarestate.co.in
+    DocumentRoot "/opt/bitnami/wordpress"
+    SSLEngine on
+    SSLCertificateFile "/opt/bitnami/apache2/conf/a.shankarestate.co.in.crt"
+    SSLCertificateKeyFile "/opt/bitnami/apache2/conf/a.shankarestate.co.in.key"
+    Include "/opt/bitnami/wordpress/conf/httpd-app.conf"
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName a.shankarestateinfo.com
+    DocumentRoot "/opt/bitnami/apps/wordpress2/htdocs"
+    SSLEngine on
+    SSLCertificateFile "/opt/bitnami/apache2/conf/a.shankarestate.co.in.crt"  # Reused certificate
+    SSLCertificateKeyFile "/opt/bitnami/apache2/conf/a.shankarestate.co.in.key"  # Reused key
+    Include "/opt/bitnami/apps/wordpress2/conf/httpd-app.conf"
+</VirtualHost>
+############################################################################
+sudo /opt/bitnami/ctlscript.sh restart apache
+
+
+
+##To ensure second site uses a separate wp-content directory
+
+sudo nano /opt/bitnami/apps/wordpress2/htdocs/wp-config.php
+
+#####################################################################################
+/** Define custom wp-content directory */
+define('WP_CONTENT_DIR', dirname(__FILE__) . '/wp-content');
+define('WP_CONTENT_URL', 'https://a.shankarestateinfo.com/wp-content');
+
+if ( ! defined( 'ABSPATH' ) ) {
+    define( 'ABSPATH', __DIR__ . '/' );
+}
+/** Sets up WordPress vars and included files. */
+require_once ABSPATH . 'wp-settings.php';
+###############################################################################
+sudo chown -R bitnami:daemon /opt/bitnami/apps/wordpress2/htdocs/wp-content
+sudo chmod -R 755 /opt/bitnami/apps/wordpress2/htdocs/wp-content
+sudo /opt/bitnami/ctlscript.sh restart apache
+
+
 
 
