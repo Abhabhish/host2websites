@@ -15,13 +15,13 @@ sudo chmod 640 /opt/bitnami/apps/wordpress2/htdocs/wp-config.php
 sudo nano /opt/bitnami/apache2/conf/bitnami/bitnami-apps-vhosts.conf
 ########
 <VirtualHost *:80>
-    ServerName your-first-domain.com
+    ServerName a.shankarestate.co.in
     DocumentRoot "/opt/bitnami/wordpress"
     Include "/opt/bitnami/wordpress/conf/httpd-app.conf"
 </VirtualHost>
 
 <VirtualHost *:80>
-    ServerName your-second-domain.com
+    ServerName a.shankarestateinfo.com
     DocumentRoot "/opt/bitnami/apps/wordpress2/htdocs"
     Include "/opt/bitnami/apps/wordpress2/conf/httpd-app.conf"
 </VirtualHost>
